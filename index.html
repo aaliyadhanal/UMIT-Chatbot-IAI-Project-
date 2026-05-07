@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>UMIT UniBot</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fcd7db;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .chat-container {
+    width: 400px;
+    height: 550px;
+    background: #ffffff;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+
+  .chat-header {
+    background: #A53860;
+    color: white;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo {
+    width: 40px;
+    height: 40px;
+    background: #FFA5AB;
+    color: #450920;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .title {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .title h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+
+  .title span {
+    font-size: 12px;
+    opacity: 0.8;
+  }
+
+  .chat-box {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .message {
+    max-width: 75%;
+    padding: 10px;
+    margin: 5px;
+    border-radius: 12px;
+  }
+
+  .user {
+    background: #FFA5AB;
+    color: #450920;
+    align-self: flex-end;
+  }
+
+  .bot {
+    background: #450920;
+    color: white;
+    align-self: flex-start;
+  }
+
+  .input-area {
+    display: flex;
+    align-items: center;
+    border-top: 2px solid #DA627D;
+    padding: 5px;
+  }
+
+  .upload-btn {
+    background: #DA627D;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    margin-right: 5px;
+  }
+
+  .upload-btn:hover {
+    background: #A53860;
+  }
+
+  textarea {
+    flex: 1;
+    resize: none;
+    padding: 8px;
+    border: none;
+    outline: none;
+    font-size: 14px;
+  }
+
+  button.send-btn {
+    padding: 8px 12px;
+    border: none;
+    background: #DA627D;
+    color: white;
+    cursor: pointer;
+    border-radius: 8px;
+  }
+
+  button.send-btn:hover {
+    background: #A53860;
+  }
+
+  .typing {
+    font-style: italic;
+    opacity: 0.7;
+  }
+</style>
+
+</head>
+
+<body>
+
+<div class="chat-container">
+
+  <div class="chat-header">
+    <div class="logo">U</div>
+    <div class="title">
+      <h3>UMIT UniBot</h3>
+      <span>Student Support Assistant</span>
+    </div>
+  </div>
+
+  <div class="chat-box" id="chatBox">
+    <div class="message bot">
+      Hello! 👋 I'm UMIT UniBot. How can I help you today?
+    </div>
+  </div>
+
+  <div class="input-area">
+    <input type="file" id="pdfFile" hidden>
+    <button class="upload-btn" onclick="document.getElementById('pdfFile').click()">📎</button>
+
+    <textarea id="userInput" rows="1" placeholder="Ask something..."></textarea>
+
+    <button class="send-btn" onclick="sendMessage()">Send</button>
+  </div>
+
+</div>
+
+<script>
+const chatBox = document.getElementById("chatBox");
+
+function addMessage(text, sender) {
+  const msg = document.createElement("div");
+  msg.classList.add("message", sender);
+  msg.innerText = text;
+  chatBox.appendChild(msg);
+  chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const message = input.value.trim();
+
+  if (!message) return;
+
+  addMessage(message, "user");
+  input.value = "";
+
+  const typing = document.createElement("div");
+  typing.classList.add("message", "bot", "typing");
+  typing.innerText = "Typing...";
+  chatBox.appendChild(typing);
+
+  try {
+    const res = await fetch('http://localhost:3000/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+
+    chatBox.removeChild(typing);
+    addMessage(data.reply || "I don't know", "bot");
+
+  } catch (error) {
+    chatBox.removeChild(typing);
+    addMessage("Server error.", "bot");
+  }
+}
+
+// 📄 AUTO PDF UPLOAD
+document.getElementById("pdfFile").addEventListener("change", uploadPDF);
+
+async function uploadPDF() {
+  console.log("Upload function triggered");
+  const fileInput = document.getElementById("pdfFile");
+  const file = fileInput.files[0];
+
+  if (!file) return;
+
+  addMessage("📄 Uploading PDF...", "user");
+
+  const typing = document.createElement("div");
+  typing.classList.add("message", "bot", "typing");
+  typing.innerText = "Reading PDF...";
+  chatBox.appendChild(typing);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("http://localhost:3000/upload-pdf", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    chatBox.removeChild(typing);
+    addMessage(data.summary || "Could not read PDF", "bot");
+
+  } catch (error) {
+    chatBox.removeChild(typing);
+    addMessage("PDF upload failed ❌", "bot");
+    console.error(error);
+  }
+
+  fileInput.value = "";
+}
+
+// Enter key
+document.getElementById("userInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
+
+</body>
+</html>
