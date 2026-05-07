@@ -44,37 +44,6 @@ UMIT-UniBot
 ├── node_modules/
 ├── uploads/
 
-Installation
-
-1. Clone or Download Project
-Place all files inside a project folder.
-
-2. Install Node.js
-Download and install Node.js.
-
-3. Install Dependencies
-Open terminal in project folder and run:
-npm install
-
-Required Packages
-If needed, install manually:
-npm install express cors body-parser openai multer pdf-parse
-
-Add API Key
-Open "server.js"
-Replace:
-apiKey: "GIVEN IN THE CODE"
-
-Run the Project
-
-Start the server:
-node server.js
-
-Open the Application
-
-Open browser and visit:
-
-http://localhost:3000
 
 How It Works
 
@@ -103,16 +72,16 @@ It contains:
 
 Important Files
 
-index.html
+index.html :
 Contains frontend UI and JavaScript logic.
 
-server.js
+server.js :
 Handles backend logic, API calls, routes, and PDF processing.
 
-data.txt
+data.txt :
 Stores chatbot knowledge and FAQ data.
 
-API Model Used
+API Model Used :
 gpt-4.1-mini
 
 Used for:
@@ -147,4 +116,5 @@ Example Questions
 - Summarize this PDF
 
 Conclusion
+
 UMIT UniBot demonstrates the integration of frontend development, backend systems, AI APIs, and file processing into a practical student support application.
